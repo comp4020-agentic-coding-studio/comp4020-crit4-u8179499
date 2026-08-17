@@ -1,4 +1,4 @@
-import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { JSDOM } from "jsdom";
 import { describe, expect, it } from "vitest";
@@ -12,12 +12,20 @@ import { describe, expect, it } from "vitest";
 const DIST = resolve("dist");
 const home = new JSDOM(readFileSync(join(DIST, "index.html"), "utf8")).window.document;
 
-function jsBundleSource(): string {
-  const assetsDir = join(DIST, "assets");
-  if (!existsSync(assetsDir)) return "";
-  return readdirSync(assetsDir)
-    .filter((name) => name.endsWith(".js"))
-    .map((name) => readFileSync(join(assetsDir, name), "utf8"))
+// A script small enough to inline (this one) ships inside the page's own
+// <script> tag rather than as a separate dist/assets/*.js file, so the
+// client logic has to be searched for across every built .html and .js file,
+// not just one location.
+function builtScriptSource(): string {
+  function filesUnder(dir: string): string[] {
+    return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+      const path = join(dir, entry.name);
+      if (entry.isDirectory()) return filesUnder(path);
+      return /\.(html|js)$/.test(entry.name) ? [path] : [];
+    });
+  }
+  return filesUnder(DIST)
+    .map((path) => readFileSync(path, "utf8"))
     .join("\n");
 }
 
@@ -31,7 +39,7 @@ describe("crit-4: an instrument", () => {
 
   it("synthesizes sound with the Web Audio API", () => {
     expect(
-      jsBundleSource(),
+      builtScriptSource(),
       "no AudioContext reference found in the built JS -- see spec/crit-4.test.ts",
     ).toMatch(/AudioContext/);
   });
@@ -40,7 +48,7 @@ describe("crit-4: an instrument", () => {
     // "playable with whatever is at hand -- mouse, keyboard or touch": not
     // proof the instrument is good, but a pointer-only or keyboard-only page
     // fails this line outright, so check both families of listener are wired.
-    const source = jsBundleSource();
+    const source = builtScriptSource();
     const hasPointerInput = /pointerdown|mousedown|touchstart/.test(source);
     const hasKeyboardInput = /keydown|keyup/.test(source);
     expect(
