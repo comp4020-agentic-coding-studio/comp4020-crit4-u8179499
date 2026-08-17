@@ -1,0 +1,33 @@
+---
+interface Props {
+  title: string;
+}
+
+const { title } = Astro.props;
+
+// BASE_URL's trailing slash isn't consistent between dev and a production
+// build (Astro normalizes it differently depending on `trailingSlash`), so
+// strip it and always join with exactly one slash rather than assuming either
+// shape.
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+---
+
+<!doctype html>
+<html lang="en-AU">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title}</title>
+    <link rel="stylesheet" href={`${base}/global.css`} />
+  </head>
+  <body>
+    <header>
+      <nav aria-label="Primary">
+        <a href="#main" class="skip-link">Skip to content</a>
+      </nav>
+    </header>
+    <main id="main">
+      <slot />
+    </main>
+  </body>
+</html>

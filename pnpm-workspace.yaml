@@ -1,3 +1,5 @@
-# esbuild (used by Vite) needs its postinstall to set up its native binary.
+# esbuild and sharp (used by Vite/Astro) need their postinstall to set up
+# their native binaries.
 allowBuilds:
   esbuild: true
+  sharp: true
