@@ -97,8 +97,8 @@ a {
   transition:
     left 45ms linear,
     top 45ms linear,
-    transform 160ms ease-out,
-    opacity 160ms ease-out;
+    transform 480ms ease-out,
+    opacity 480ms ease-out;
   animation: breathe 4s ease-in-out infinite;
 }
 
@@ -113,8 +113,8 @@ a {
   transition:
     left 45ms linear,
     top 45ms linear,
-    transform 90ms ease-out,
-    opacity 90ms ease-out;
+    transform 70ms ease-out,
+    opacity 70ms ease-out;
 }
 
 @keyframes breathe {

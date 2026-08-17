@@ -38,7 +38,7 @@ if (surface) {
     const brightnessFraction = 1 - yFraction; // up = brighter
     const noteIndex = noteIndexForFraction(xFraction, frequencies.length);
     const frequency = frequencies[noteIndex];
-    const cutoff = filterCutoffForFraction(brightnessFraction);
+    const cutoff = filterCutoffForFraction(brightnessFraction, frequency);
     if (isNewNote) synth.noteOn(frequency, cutoff);
     else synth.update(frequency, cutoff);
     setVisual(xFraction, yFraction, true);

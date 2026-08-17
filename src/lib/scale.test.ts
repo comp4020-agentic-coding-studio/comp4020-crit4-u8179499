@@ -47,13 +47,18 @@ describe("frequencyForFraction", () => {
 });
 
 describe("filterCutoffForFraction", () => {
-  it("stays within the given range at the extremes", () => {
-    expect(filterCutoffForFraction(0, 200, 6000)).toBeCloseTo(200, 5);
-    expect(filterCutoffForFraction(1, 200, 6000)).toBeCloseTo(6000, 5);
+  it("scales with the note's own frequency, not a fixed absolute range", () => {
+    expect(filterCutoffForFraction(0, 440, 0.5, 8)).toBeCloseTo(220, 5);
+    expect(filterCutoffForFraction(1, 440, 0.5, 8)).toBeCloseTo(3520, 5);
   });
 
   it("is monotonically increasing with fraction", () => {
-    expect(filterCutoffForFraction(0.75)).toBeGreaterThan(filterCutoffForFraction(0.25));
+    expect(filterCutoffForFraction(0.75, 440)).toBeGreaterThan(filterCutoffForFraction(0.25, 440));
+  });
+
+  it("stays within sane absolute bounds for very low or very high notes", () => {
+    expect(filterCutoffForFraction(0, 40)).toBeGreaterThanOrEqual(50);
+    expect(filterCutoffForFraction(1, 20000)).toBeLessThanOrEqual(16000);
   });
 });
 
@@ -70,5 +75,10 @@ describe("noteIndexForKey", () => {
 
   it("clamps to the available note count if there are fewer notes than keys", () => {
     expect(noteIndexForKey("l", 3)).toBe(2);
+  });
+
+  it("spreads the key row across the full note range when there are more notes than keys", () => {
+    expect(noteIndexForKey("l", 25)).toBe(24);
+    expect(noteIndexForKey("a", 25)).toBe(0);
   });
 });
