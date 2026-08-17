@@ -13,7 +13,15 @@
 body {
   margin: 0;
   padding: 0;
-  background: var(--bg);
+
+  /* Layered, static gradients rather than a flat fill: two faint off-centre
+     glows for depth, plus a gentle vignette so the edges recede -- calm and
+     cheap to paint (no images, no animation on these). */
+  background:
+    radial-gradient(ellipse 70% 55% at 22% 18%, color-mix(in srgb, var(--accent) 10%, transparent) 0%, transparent 62%),
+    radial-gradient(ellipse 65% 55% at 82% 85%, color-mix(in srgb, #b48cff 8%, transparent) 0%, transparent 60%),
+    radial-gradient(ellipse 120% 120% at 50% 50%, transparent 45%, color-mix(in srgb, #000 45%, transparent) 100%),
+    var(--bg);
   color: var(--ink);
   font-family: system-ui, sans-serif;
   line-height: 1.6;
@@ -76,30 +84,36 @@ a {
   --x: 50%;
   --y: 50%;
   --hue: 210;
+  --brightness: 0.5; /* neutral until the first note sets a real value */
 }
 
 .glow {
   position: absolute;
   left: var(--x);
   top: var(--y);
-  width: min(60vw, 60vh);
-  height: min(60vw, 60vh);
+  width: min(34vw, 34vh);
+  height: min(34vw, 34vh);
   background: radial-gradient(
     circle,
-    hsl(var(--hue) 95% 70% / 90%) 0%,
-    hsl(var(--hue) 90% 55% / 45%) 40%,
+    hsl(var(--hue) calc(82% + var(--brightness) * 13%) calc(62% + var(--brightness) * 14%) / 90%) 0%,
+    hsl(var(--hue) calc(78% + var(--brightness) * 12%) calc(46% + var(--brightness) * 14%) / 45%) 40%,
     hsl(var(--hue) 85% 40% / 0%) 72%
   );
   border-radius: 50%;
-  transform: translate(-50%, -50%) scale(0.55);
-  filter: blur(4px);
-  opacity: 0.55;
+
+  /* Darker/lower notes read as a broader, softer glow; brighter/higher notes
+     pull it in tighter and sharpen it -- the same shape language as the
+     sound's own brightness sweep, not a separate decoration. */
+  transform: translate(-50%, -50%) scale(calc(0.5 - var(--brightness) * 0.1));
+  filter: blur(calc(4px - var(--brightness) * 2px));
+  opacity: calc(0.52 + var(--brightness) * 0.16);
   transition:
     left 45ms linear,
     top 45ms linear,
     transform 480ms ease-out,
-    opacity 480ms ease-out;
-  animation: breathe 4s ease-in-out infinite;
+    opacity 480ms ease-out,
+    filter 480ms ease-out;
+  animation: breathe 11s ease-in-out infinite;
 }
 
 .surface.has-played .glow {
@@ -107,26 +121,85 @@ a {
 }
 
 .surface.is-active .glow {
-  transform: translate(-50%, -50%) scale(0.85);
-  opacity: 0.95;
-  filter: blur(2px);
+  transform: translate(-50%, -50%) scale(calc(0.78 - var(--brightness) * 0.18));
+  opacity: calc(0.86 + var(--brightness) * 0.14);
+  filter: blur(calc(2px - var(--brightness) * 0.8px));
   transition:
     left 45ms linear,
     top 45ms linear,
     transform 70ms ease-out,
-    opacity 70ms ease-out;
+    opacity 70ms ease-out,
+    filter 70ms ease-out;
+}
+
+/* A short-lived, purely CSS trail: every trail dot reads the same --x/--y as
+   the glow, but each carries a longer, slightly different transition
+   duration, so a fast drag stretches them out into a soft comet-tail behind
+   the glow, and they quietly converge and vanish the moment a gesture stops.
+   No animation loop, no per-frame JS -- the lag is just slower CSS easing. */
+.trail {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: min(22vw, 22vh);
+  height: min(22vw, 22vh);
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    hsl(var(--hue) 80% 62% / 50%) 0%,
+    hsl(var(--hue) 75% 45% / 0%) 70%
+  );
+  filter: blur(6px);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    left 160ms ease-out,
+    top 160ms ease-out,
+    opacity 260ms ease-out;
+}
+
+.trail:nth-of-type(1) {
+  transform: translate(-50%, -50%) scale(0.44);
+  transition-duration: 120ms, 120ms, 240ms;
+}
+
+.trail:nth-of-type(2) {
+  transform: translate(-50%, -50%) scale(0.34);
+  transition-duration: 220ms, 220ms, 300ms;
+}
+
+.trail:nth-of-type(3) {
+  transform: translate(-50%, -50%) scale(0.24);
+  transition-duration: 340ms, 340ms, 360ms;
+}
+
+.surface.is-active .trail:nth-of-type(1) {
+  opacity: 0.4;
+}
+
+.surface.is-active .trail:nth-of-type(2) {
+  opacity: 0.26;
+}
+
+.surface.is-active .trail:nth-of-type(3) {
+  opacity: 0.15;
 }
 
 @keyframes breathe {
   0%,
   100% {
-    transform: translate(-50%, -50%) scale(0.5);
-    opacity: 0.4;
+    transform: translate(calc(-50% - 10px), calc(-50% + 6px)) scale(0.5);
+    opacity: 0.35;
   }
 
-  50% {
-    transform: translate(-50%, -50%) scale(0.6);
-    opacity: 0.6;
+  33% {
+    transform: translate(calc(-50% + 9px), calc(-50% - 9px)) scale(0.58);
+    opacity: 0.5;
+  }
+
+  66% {
+    transform: translate(calc(-50% + 3px), calc(-50% + 11px)) scale(0.54);
+    opacity: 0.44;
   }
 }
 
@@ -151,5 +224,9 @@ a {
   .glow {
     animation: none;
     transition: none;
+  }
+
+  .trail {
+    display: none;
   }
 }

@@ -27,9 +27,11 @@ if (surface) {
   };
 
   const setVisual = (xFraction: number, yFraction: number, active: boolean): void => {
+    const brightness = 1 - yFraction; // up = brighter, mirrors playAtFraction
     surface.style.setProperty("--x", `${xFraction * 100}%`);
     surface.style.setProperty("--y", `${yFraction * 100}%`);
-    surface.style.setProperty("--hue", `${190 + (1 - yFraction) * 150}`);
+    surface.style.setProperty("--hue", `${190 + brightness * 150}`);
+    surface.style.setProperty("--brightness", `${brightness}`);
     surface.classList.toggle("is-active", active);
     surface.classList.add("has-played");
   };
